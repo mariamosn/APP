@@ -78,8 +78,8 @@ int main() {
         (t2.tv_sec * 1000000 + t2.tv_usec));
         // printf("filtru 1: %f\n", delta);
 
-        // filtru 2 = contrast (ew e cam naspa asta)
-        float contrast = 0.5; // idk trebuie sa fie float oare?
+        // filtru 2 = contrast
+        float contrast = 0.5;
         float factor = (259. * (contrast + 255.)) / (255. * (259. - contrast));
         for (unsigned int i = 1; i < height - 1; ++i) {
             for (unsigned int j = 1; j < width - 1; ++j) {
