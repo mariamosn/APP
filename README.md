@@ -9,9 +9,10 @@ Vom compara performața a două abordări ale aplicării succesive de filtre (pi
 - Tîmbur Maria
 
 # Asistent
-Voichița Iancu
+- Voichița Iancu
 
 # Impartire taskuri
-- Moșneag Maria -> MPI - varianta pipeline
-- Tîmbur Maria -> Pthreads + MPI - varianta embarrassingly parallel
-- Isar Ioana-Teodora -> Pthreads - varianta pipeline sau OpenMP - ambele variante
+
+1. Moșneag Maria -> MPI - varianta pipeline
+2. Tîmbur Maria -> Pthreads + MPI - varianta embarrassingly parallel
+3. Isar Ioana-Teodora -> Pthreads - varianta pipeline sau OpenMP - ambele variante
