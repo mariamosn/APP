@@ -181,7 +181,7 @@ int main() {
         gettimeofday(&t6, NULL);
         delta = ((t6.tv_sec * 1000000 + t6.tv_usec) -
         (t5.tv_sec * 1000000 + t5.tv_usec));
-        // printf("scriere: %f\n", delta);
+        printf("scriere: %f\n", delta);
 
     }
 
