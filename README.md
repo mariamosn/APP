@@ -18,22 +18,22 @@ Vom compara performața a două abordări ale aplicării succesive de filtre (pi
 3. Isar Ioana-Teodora -> Pthreads - varianta pipeline
 
 # Ierarhie de fișiere
-.
-|__ img:    conține imaginile primite ca input
-|   |__ out:    conține imaginile rezultate în urma aplicării filtrelor
-|
-|__ utils:  conține fișierele sursă folosite în toate variantele de implementare
-|
-|__ serial: conține fișierele sursă corespunzătoare implementării seriale
-|
-|__ classic:    conține fișierele sursă corespunzătoare implementării variantei
-|   |           embarrassingly parallel
-|   |__ MPI
-|   |__ PTHREADS
-|
-|__ pipeline:   conține fișierele sursă corespunzătoare implementării variantei
-|   |           pipeline
-|   |__ MPI
-|   |__ PTHREADS
-|
-|__ README
+.<br />
+|__ img:    conține imaginile primite ca input<br />
+|   |__ out:    conține imaginile rezultate în urma aplicării filtrelor<br />
+|<br />
+|__ utils:  conține fișierele sursă folosite în toate variantele de implementare<br />
+|<br />
+|__ serial: conține fișierele sursă corespunzătoare implementării seriale<br />
+|<br />
+|__ classic:    conține fișierele sursă corespunzătoare implementării variantei<br />
+|   |           embarrassingly parallel<br />
+|   |__ MPI<br />
+|   |__ PTHREADS<br />
+|<br />
+|__ pipeline:   conține fișierele sursă corespunzătoare implementării variantei<br />
+|   |           pipeline<br />
+|   |__ MPI<br />
+|   |__ PTHREADS<br />
+|<br />
+|__ README<br />
