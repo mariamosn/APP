@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "bitmap_image.hpp"
+#include "../utils/bitmap_image.hpp"
 #include <sys/time.h>
 #include <pthread.h>
 
-#define N 300
+#define N 1
 #define ENOUGH 100
 
 rgb_t** inImage;
@@ -41,7 +41,7 @@ int main() {
         // timp 0
         gettimeofday(&t0, NULL);
 
-        sprintf(file_name, "./img/%d.bmp", pic);
+        sprintf(file_name, "../img/%d.bmp", pic);
         // citire imagine
         image = bitmap_image(file_name);
 
@@ -173,7 +173,7 @@ int main() {
         (t3.tv_sec * 1000000 + t3.tv_usec));
         // printf("filtru 4: %f\n", delta);
 
-        sprintf(out_file, "./img/out/out_%d.bmp", pic);
+        sprintf(out_file, "../img/out/out_%d.bmp", pic);
         // scriere imagine
         out.save_image(out_file);
 
