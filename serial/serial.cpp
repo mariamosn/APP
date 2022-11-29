@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "../utils/bitmap_image.hpp"
 #include <sys/time.h>
-#include <pthread.h>
 
 #define N 1
 #define ENOUGH 100

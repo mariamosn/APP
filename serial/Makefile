@@ -9,4 +9,4 @@ old: serial_old.cpp
 	./serial_old
 
 clean:
-	rm -f serial
+	rm -f serial serial_old
