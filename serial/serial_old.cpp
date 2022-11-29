@@ -30,7 +30,7 @@ void loadPixelsToArray(){
 
 int main() {
     time_t time;
-    struct timeval t0, t1, t2, t3, t4, t5, start, end;
+    struct timeval t0, t1, t2, t3, t4, t5, t6, start, end;
     float delta;    
     char file_name[ENOUGH], out_file[ENOUGH];
 
@@ -56,7 +56,7 @@ int main() {
         gettimeofday(&t1, NULL);
         delta = ((t1.tv_sec * 1000000 + t1.tv_usec) -
         (t0.tv_sec * 1000000 + t0.tv_usec));
-        // printf("citirea imaginii: %f\n", delta);
+        printf("citirea imaginii: %f\n", delta);
         
 
         // filtru 1 = alb-negru
@@ -73,10 +73,10 @@ int main() {
         }
 
         // timp 2
-        gettimeofday(&t3, NULL);
-        delta = ((t3.tv_sec * 1000000 + t3.tv_usec) -
-        (t2.tv_sec * 1000000 + t2.tv_usec));
-        // printf("filtru 1: %f\n", delta);
+        gettimeofday(&t2, NULL);
+        delta = ((t2.tv_sec * 1000000 + t2.tv_usec) -
+        (t1.tv_sec * 1000000 + t1.tv_usec));
+        printf("filtru 1: %f\n", delta);
 
         // filtru 2 = contrast
         float contrast = 0.5;
@@ -98,10 +98,10 @@ int main() {
         }
 
         // timp 3
-        gettimeofday(&t2, NULL);
-        delta = ((t2.tv_sec * 1000000 + t2.tv_usec) -
-        (t1.tv_sec * 1000000 + t1.tv_usec));
-        // printf("filtru 2: %f\n", delta);
+        gettimeofday(&t3, NULL);
+        delta = ((t3.tv_sec * 1000000 + t3.tv_usec) -
+        (t2.tv_sec * 1000000 + t2.tv_usec));
+        printf("filtru 2: %f\n", delta);
         
 
         // filtru 3 = sharpness
@@ -136,7 +136,7 @@ int main() {
         gettimeofday(&t4, NULL);
         delta = ((t4.tv_sec * 1000000 + t4.tv_usec) -
         (t3.tv_sec * 1000000 + t3.tv_usec));
-        // printf("filtru 3: %f\n", delta);
+        printf("filtru 3: %f\n", delta);
 
         // filtru 4 = blur
         for (int y = 0; y < height; y++){
@@ -168,19 +168,19 @@ int main() {
         }
 
         // timp 5
-        gettimeofday(&t4, NULL);
-        delta = ((t4.tv_sec * 1000000 + t4.tv_usec) -
-        (t3.tv_sec * 1000000 + t3.tv_usec));
-        // printf("filtru 4: %f\n", delta);
+        gettimeofday(&t5, NULL);
+        delta = ((t5.tv_sec * 1000000 + t5.tv_usec) -
+        (t4.tv_sec * 1000000 + t4.tv_usec));
+        printf("filtru 4: %f\n", delta);
 
         sprintf(out_file, "../img/out/out_%d.bmp", pic);
         // scriere imagine
         out.save_image(out_file);
 
         // timp 6
-        gettimeofday(&t5, NULL);
-        delta = ((t5.tv_sec * 1000000 + t5.tv_usec) -
-        (t4.tv_sec * 1000000 + t4.tv_usec));
+        gettimeofday(&t6, NULL);
+        delta = ((t6.tv_sec * 1000000 + t6.tv_usec) -
+        (t5.tv_sec * 1000000 + t5.tv_usec));
         // printf("scriere: %f\n", delta);
 
     }
