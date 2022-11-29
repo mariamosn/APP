@@ -171,35 +171,35 @@ int main()
         gettimeofday(&t1, NULL);
         delta = ((t1.tv_sec * 1000000 + t1.tv_usec) -
                  (t0.tv_sec * 1000000 + t0.tv_usec));
-        // printf("durata citire: %f\n", delta);
+        printf("durata citire: %f\n", delta);
 
         // filtru 1 = alb-negru
         filter_black_white();
         gettimeofday(&t2, NULL);
         delta = ((t2.tv_sec * 1000000 + t2.tv_usec) -
                  (t1.tv_sec * 1000000 + t1.tv_usec));
-        // printf("filtrul black & white: %f\n", delta);
+        printf("filtrul black & white: %f\n", delta);
 
         // filtru 2 = contrast
         filter_contrast();
         gettimeofday(&t3, NULL);
         delta = ((t3.tv_sec * 1000000 + t3.tv_usec) -
                  (t2.tv_sec * 1000000 + t2.tv_usec));
-        // printf("filtru constrast: %f\n", delta);
+        printf("filtru constrast: %f\n", delta);
 
         // filtru 3 = sharpness
         filter_sharpness();
         gettimeofday(&t4, NULL);
         delta = ((t4.tv_sec * 1000000 + t4.tv_usec) -
                  (t3.tv_sec * 1000000 + t3.tv_usec));
-        // printf("filtru sharpness: %f\n", delta);
+        printf("filtru sharpness: %f\n", delta);
 
         // filtru 4 = blur
         filter_blur();
         gettimeofday(&t5, NULL);
         delta = ((t5.tv_sec * 1000000 + t5.tv_usec) -
                  (t4.tv_sec * 1000000 + t4.tv_usec));
-        // printf("filtru blur: %f\n", delta);
+        printf("filtru blur: %f\n", delta);
 
         sprintf(out_file, "../img/out/out_%d.bmp", pic);
         // scriere imagine
@@ -207,7 +207,7 @@ int main()
         gettimeofday(&t6, NULL);
         delta = ((t6.tv_sec * 1000000 + t6.tv_usec) -
                  (t5.tv_sec * 1000000 + t5.tv_usec));
-        // printf("timp scriere: %f\n", delta);
+        printf("timp scriere: %f\n", delta);
     }
 
     gettimeofday(&end, NULL);
