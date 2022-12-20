@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define N 5
+#define N 30
 #define ENOUGH 100
 
 rgb_t **inImage1, **inImage2;
@@ -28,12 +28,6 @@ sem_t sem_filter3_b;
 sem_t sem_filter4_a;
 sem_t sem_filter4_b;
 sem_t sem_op;
-
-int ctr_read;
-int ctr_write;
-
-pthread_cond_t cond_read;
-pthread_cond_t cond_write;
 
 int finished = 0, finished2 = 0, finished_filter1 = 0, finished_filter2 = 0, finished_filter3 = 0, finished_filter4 = 0;
 int read_allowed = 0, write_allowed = 0, filter1_allowed = 0, filter2_allowed = 0, filter3_allowed = 0, filter4_allowed = 0;
@@ -57,7 +51,6 @@ void loadPixelsToArray(rgb_t **inImage, bitmap_image image)
             image.get_pixel(y, x, inImage[y][x]);
         }
     }
-
 }
 
 void filter_black_white(rgb_t **inImage, int height, int width)
@@ -188,7 +181,6 @@ void *input_task(void *args)
         if (read_allowed)
         {
             sem_wait(&sem_read_a);
-            printf("citeste matricea A\n");
             sprintf(file_name1, "./img/%d.bmp", i);
             image1 = bitmap_image(file_name1);
             inImage1 = (rgb_t **)malloc(image1.height() * sizeof(rgb_t *));
@@ -199,7 +191,6 @@ void *input_task(void *args)
         else
         {
             sem_wait(&sem_read_b);
-            printf("citeste matricea B\n");
             sprintf(file_name2, "./img/%d.bmp", i);
             image2 = bitmap_image(file_name2);
             inImage2 = (rgb_t **)malloc(image2.height() * sizeof(rgb_t *));
@@ -233,7 +224,6 @@ void *output_task(void *args)
         if (write_allowed == 1)
         {
             sem_wait(&sem_write_a);
-            printf("scrie matricea A\n");
             sprintf(out_file, "./img/out/out_%d.bmp", i);
             out1.save_image(out_file);
             i++;
@@ -242,7 +232,6 @@ void *output_task(void *args)
         else
         {
             sem_wait(&sem_write_b);
-            printf("scrie matricea B\n");
             sprintf(out_file, "./img/out/out_%d.bmp", i);
             out2.save_image(out_file);
             i++;
@@ -274,7 +263,6 @@ void *filter_contrast_task(void *args)
         if (filter2_allowed)
         {
             sem_wait(&sem_filter2_a);
-            printf(" filtru contrast prelucreaza matricea A\n");
             filter_contrast(inImage1, image1.height(), image1.width());
             i++;
             sem_post(&sem_filter3_a);
@@ -282,7 +270,6 @@ void *filter_contrast_task(void *args)
         else
         {
             sem_wait(&sem_filter2_b);
-            printf(" filtrul contrast prelucreaza matricea B\n");
             filter_contrast(inImage2, image2.height(), image2.width());
             i++;
             sem_post(&sem_filter3_b);
@@ -314,7 +301,6 @@ void *filter_black_white_task(void *args)
         if (filter1_allowed)
         {
             sem_wait(&sem_filter1_a);
-            printf(" filtru black&white prelucreaza matricea A\n");
             filter_black_white(inImage1, image1.height(), image1.width());
             i++;
             sem_post(&sem_filter2_a);
@@ -322,7 +308,6 @@ void *filter_black_white_task(void *args)
         else
         {
             sem_wait(&sem_filter1_b);
-            printf("filtru black&white  prelucreaza matricea B\n");
             filter_black_white(inImage2, image2.height(), image2.width());
             i++;
             sem_post(&sem_filter2_b);
@@ -354,7 +339,6 @@ void *filter_sharpness_task(void *args)
         if (filter3_allowed)
         {
             sem_wait(&sem_filter3_a);
-            printf(" filtru contrast prelucreaza matricea A\n");
             filter_sharpness(inImage1, image1.height(), image1.width());
             i++;
             sem_post(&sem_filter4_a);
@@ -362,7 +346,6 @@ void *filter_sharpness_task(void *args)
         else
         {
             sem_wait(&sem_filter3_b);
-            printf(" filtrul contrast prelucreaza matricea B\n");
             filter_sharpness(inImage2, image2.height(), image2.width());
             i++;
             sem_post(&sem_filter4_b);
@@ -394,7 +377,6 @@ void *filter_blur_task(void *args)
         if (filter4_allowed)
         {
             sem_wait(&sem_filter4_a);
-            printf(" filtru contrast prelucreaza matricea A\n");
             out1 = bitmap_image(image1.height(), image1.width());
             out1 = filter_blur(inImage1, image1.height(), image1.width(), out1);
             i++;
@@ -403,7 +385,6 @@ void *filter_blur_task(void *args)
         else
         {
             sem_wait(&sem_filter4_b);
-            printf(" filtrul contrast prelucreaza matricea B\n");
             out2 = bitmap_image(image2.height(), image2.width());
             out2 = filter_blur(inImage2, image2.height(), image2.width(), out2);
             i++;
@@ -434,8 +415,6 @@ int main()
     long arguments[NUM_THREADS];
 
     // init
-    pthread_cond_init(&cond_read, NULL);
-    pthread_cond_init(&cond_write, NULL);
 
     sem_init(&sem_read_a, 0, 1);
     sem_init(&sem_read_b, 0, 1);
@@ -486,8 +465,6 @@ int main()
         }
     }
 
-    pthread_cond_destroy(&cond_read);
-    pthread_cond_destroy(&cond_write);
     sem_destroy(&sem_read_a);
     sem_destroy(&sem_read_b);
     sem_destroy(&sem_write_a);
