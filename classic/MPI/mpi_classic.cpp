@@ -166,6 +166,9 @@ int main(int argc, char *argv[])
     int numtasks, rank;
     char out_file[ENOUGH];
 
+    double timer_start;
+    double timer_end;
+
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -198,6 +201,7 @@ int main(int argc, char *argv[])
             {
                 MPI_Send(&(inImage[i][0]), width, stype, tid, 0, MPI_COMM_WORLD);
             }
+            timer_start = MPI_Wtime();
         }
     }
     else
@@ -229,9 +233,16 @@ int main(int argc, char *argv[])
             }
         }
         filter_blur(inImage, height, width, out);
-
-        out.save_image("../../img/out.bmp");
     }
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if (rank == 0)
+    {
+        timer_end = MPI_Wtime();
+        printf("time: %fs.\n", timer_end - timer_start);
+    }
+    out.save_image("../../img/out.bmp");
 
     MPI_Finalize();
 

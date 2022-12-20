@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string>
+#include <sys/time.h>
 
 #define NUM_THREADS 4
 #define N 10
@@ -232,9 +233,14 @@ int main(int argc, const char *argv[])
     int height = image.height();
     int width = image.width();
 
+    struct timeval start_time, end_time;
+    double seq_time;
+
     pthread_barrier_init(&barrier, NULL, NUM_THREADS);
 
     out = bitmap_image(width, height);
+
+    gettimeofday(&start_time, NULL);
 
     for (int i = 0; i < NUM_THREADS; i++)
     {
@@ -251,6 +257,11 @@ int main(int argc, const char *argv[])
     {
         pthread_join(thread[i], NULL);
     }
+
+    gettimeofday(&end_time, NULL);
+    seq_time = (double)((end_time.tv_usec - start_time.tv_usec) / 1.0e6 + end_time.tv_sec - start_time.tv_sec);
+
+    printf("time: %fs.\n", seq_time);
 
     out.save_image("../../img/out.bmp");
 
