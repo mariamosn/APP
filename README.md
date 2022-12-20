@@ -37,3 +37,7 @@ Vom compara performața a două abordări ale aplicării succesive de filtre (pi
 |   |__ PTHREADS<br />
 |<br />
 |__ README<br />
+
+# Resurse folosite
+
+https://stackoverflow.com/questions/66622459/sending-array-of-structs-in-mpi
