@@ -1,20 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../utils/bitmap_image.hpp"
-#include <sys/time.h>
 
-#define N 1
+#define N 500
 #define ENOUGH 100
-
-rgb_t **inImage;
-bitmap_image image;
-bitmap_image out;
-int height, width;
 
 using namespace std;
 
-void loadPixelsToArray()
+rgb_t **get_original(char file_name[], int *height, int *width)
 {
+    rgb_t **inImage;
+    bitmap_image image;
+
+    image = bitmap_image(file_name);
     inImage = (rgb_t **)malloc(image.height() * sizeof(rgb_t *));
 
     for (int i = 0; i < image.width(); i++)
@@ -29,9 +27,14 @@ void loadPixelsToArray()
             image.get_pixel(y, x, inImage[y][x]);
         }
     }
+
+    *height = image.height();
+    *width = image.width();
+
+    return inImage;
 }
 
-void filter_black_white()
+void filter_black_white(rgb_t **inImage, int height, int width)
 {
     for (unsigned int i = 1; i < height - 1; ++i)
     {
@@ -48,7 +51,7 @@ void filter_black_white()
     }
 }
 
-void filter_contrast()
+void filter_contrast(rgb_t **inImage, int height, int width)
 {
     float contrast = 0.5;
     float factor = (259. * (contrast + 255.)) / (255. * (259. - contrast));
@@ -71,7 +74,7 @@ void filter_contrast()
     }
 }
 
-void filter_sharpness()
+void filter_sharpness(rgb_t **inImage, int height, int width)
 {
     static const float kernel[3][3] = {{0, -2. / 3., 0},
                                        {-2. / 3., 11. / 3., -2. / 3.},
@@ -89,9 +92,12 @@ void filter_sharpness()
             {
                 for (int kj = -1; kj <= 1; ++kj)
                 {
-                    red += static_cast<float>(inImage[i + ki][j + kj].red) * kernel[ki + 1][kj + 1];
-                    green += static_cast<float>(inImage[i + ki][j + kj].green) * kernel[ki + 1][kj + 1];
-                    blue += static_cast<float>(inImage[i + ki][j + kj].blue) * kernel[ki + 1][kj + 1];
+                    red += static_cast<float>(inImage[i + ki][j + kj].red) *
+                        kernel[ki + 1][kj + 1];
+                    green += static_cast<float>(inImage[i + ki][j + kj].green) *
+                        kernel[ki + 1][kj + 1];
+                    blue += static_cast<float>(inImage[i + ki][j + kj].blue) *
+                        kernel[ki + 1][kj + 1];
                 }
             }
 
@@ -105,7 +111,7 @@ void filter_sharpness()
     }
 }
 
-void filter_blur()
+void filter_blur(rgb_t **inImage, int height, int width, bitmap_image &out)
 {
     for (int y = 0; y < height; y++)
     {
@@ -143,76 +149,38 @@ void filter_blur()
 
 int main()
 {
-    time_t time;
-    struct timeval t0, t1, t2, t3, t4, t5, t6, start, end;
-    float delta;
+    int numtasks, rank;
+    
+    rgb_t **inImage;
+    int height, width;
+    bitmap_image out;
+
     char file_name[ENOUGH], out_file[ENOUGH];
 
-    gettimeofday(&start, NULL);
-
-    for (int pic = 1; pic <= N; pic++)
-    {
-
-        // timp 0
-        gettimeofday(&t0, NULL);
-
+    for (int pic = 1; pic <= N; pic++) {
         sprintf(file_name, "../img/%d.bmp", pic);
 
         // citire imagine
-        image = bitmap_image(file_name);
-        loadPixelsToArray();
-
-        height = image.height();
-        width = image.width();
-        out = bitmap_image(width, height);
-
-        // citire durata
-        gettimeofday(&t1, NULL);
-        delta = ((t1.tv_sec * 1000000 + t1.tv_usec) -
-                 (t0.tv_sec * 1000000 + t0.tv_usec));
-        printf("durata citire: %f\n", delta);
+        inImage = get_original(file_name, &height, &width);            
 
         // filtru 1 = alb-negru
-        filter_black_white();
-        gettimeofday(&t2, NULL);
-        delta = ((t2.tv_sec * 1000000 + t2.tv_usec) -
-                 (t1.tv_sec * 1000000 + t1.tv_usec));
-        printf("filtrul black & white: %f\n", delta);
+        filter_black_white(inImage, height, width);
 
         // filtru 2 = contrast
-        filter_contrast();
-        gettimeofday(&t3, NULL);
-        delta = ((t3.tv_sec * 1000000 + t3.tv_usec) -
-                 (t2.tv_sec * 1000000 + t2.tv_usec));
-        printf("filtru constrast: %f\n", delta);
+        filter_contrast(inImage, height, width);
 
         // filtru 3 = sharpness
-        filter_sharpness();
-        gettimeofday(&t4, NULL);
-        delta = ((t4.tv_sec * 1000000 + t4.tv_usec) -
-                 (t3.tv_sec * 1000000 + t3.tv_usec));
-        printf("filtru sharpness: %f\n", delta);
+        filter_sharpness(inImage, height, width);
+        
+        out = bitmap_image(width, height);
 
         // filtru 4 = blur
-        filter_blur();
-        gettimeofday(&t5, NULL);
-        delta = ((t5.tv_sec * 1000000 + t5.tv_usec) -
-                 (t4.tv_sec * 1000000 + t4.tv_usec));
-        printf("filtru blur: %f\n", delta);
+        filter_blur(inImage, height, width, out);
 
-        sprintf(out_file, "../img/out/out_%d.bmp", pic);
         // scriere imagine
+        sprintf(out_file, "../img/out/out_%d.bmp", pic);
         out.save_image(out_file);
-        gettimeofday(&t6, NULL);
-        delta = ((t6.tv_sec * 1000000 + t6.tv_usec) -
-                 (t5.tv_sec * 1000000 + t5.tv_usec));
-        printf("timp scriere: %f\n", delta);
     }
-
-    gettimeofday(&end, NULL);
-    delta = ((end.tv_sec * 1000000 + end.tv_usec) -
-             (start.tv_sec * 1000000 + start.tv_usec));
-    printf("timp total: %f\n", delta);
 
     return 0;
 }
