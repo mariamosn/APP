@@ -28,12 +28,12 @@ Vom compara performața a două abordări ale aplicării succesive de filtre
 |__ serial: conține fișierele sursă corespunzătoare implementării seriale<br />
 |<br />
 |__ classic:    conține fișierele sursă corespunzătoare implementării variantei<br />
-|&emsp;|           embarrassingly parallel<br />
+|&emsp;|&emsp; embarrassingly parallel<br />
 |&emsp;|__ MPI<br />
 |&emsp;|__ PTHREADS<br />
 |<br />
 |__ pipeline:   conține fișierele sursă corespunzătoare implementării variantei<br />
-|&emsp;|           pipeline<br />
+|&emsp;|&emsp; pipeline<br />
 |&emsp;|__ MPI<br />
 |&emsp;|__ PTHREADS<br />
 |<br />
