@@ -3,7 +3,7 @@
 #include "../../utils/bitmap_image.hpp"
 #include "mpi.h"
 
-#define N 10
+#define N 500
 #define ENOUGH 100
 
 using namespace std;
@@ -93,9 +93,12 @@ void filter_sharpness(rgb_t **inImage, int height, int width)
             {
                 for (int kj = -1; kj <= 1; ++kj)
                 {
-                    red += static_cast<float>(inImage[i + ki][j + kj].red) * kernel[ki + 1][kj + 1];
-                    green += static_cast<float>(inImage[i + ki][j + kj].green) * kernel[ki + 1][kj + 1];
-                    blue += static_cast<float>(inImage[i + ki][j + kj].blue) * kernel[ki + 1][kj + 1];
+                    red += static_cast<float>(inImage[i + ki][j + kj].red) *
+                        kernel[ki + 1][kj + 1];
+                    green += static_cast<float>(inImage[i + ki][j + kj].green) *
+                        kernel[ki + 1][kj + 1];
+                    blue += static_cast<float>(inImage[i + ki][j + kj].blue) *
+                        kernel[ki + 1][kj + 1];
                 }
             }
 
@@ -145,7 +148,6 @@ void filter_blur(rgb_t **inImage, int height, int width, bitmap_image &out)
     }
 }
 
-// Resource: https://stackoverflow.com/questions/66622459/sending-array-of-structs-in-mpi
 void define_struct(MPI_Datatype *stype) {
     int cnt = 3;
     int blocklens[cnt] = {1, 1, 1};
@@ -202,11 +204,6 @@ int main(int argc, char *argv[])
             for (int i = 0; i < height; i++) {
                 MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
             }
-            /*
-            MPI_Send(&(inImage[0][0]),
-                    height * width,
-                    stype, rank + 2, 0, MPI_COMM_WORLD);
-            */
 
             // free img
             for (int i = 0; i < width; i++) {
@@ -264,11 +261,6 @@ int main(int argc, char *argv[])
             for (int i = 0; i < height; i++) {
                 MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            /*
-            MPI_Recv(&(inImage[0][0]),
-                    height * width,
-                    stype, rank - 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            */
 
             out = bitmap_image(width, height);
 
