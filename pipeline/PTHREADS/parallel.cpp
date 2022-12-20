@@ -7,7 +7,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define N 30
+#define N 500
 #define ENOUGH 100
 
 rgb_t **inImage1, **inImage2;
