@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bitmap_image.hpp"
+#include "../../utils/bitmap_image.hpp"
 #include <sys/time.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -27,12 +28,9 @@ sem_t sem_filter3_a;
 sem_t sem_filter3_b;
 sem_t sem_filter4_a;
 sem_t sem_filter4_b;
-sem_t sem_op;
 
 int finished = 0, finished2 = 0, finished_filter1 = 0, finished_filter2 = 0, finished_filter3 = 0, finished_filter4 = 0;
 int read_allowed = 0, write_allowed = 0, filter1_allowed = 0, filter2_allowed = 0, filter3_allowed = 0, filter4_allowed = 0;
-int written_a = 1, written_b = 1;
-int a = 0, b = 0;
 
 char file_name1[ENOUGH], file_name2[ENOUGH], out_file[ENOUGH];
 
@@ -175,13 +173,14 @@ void *input_task(void *args)
         {
             break;
         }
-
+        // indica daca actiunea are loc pe matricea A sau matricea B
         read_allowed = 1 - read_allowed;
-
+        // semaforul sem_read indica daca continutul matricei a fost scris deci aceasta poate fi actualizata
+        // semaforul sem_filter_1_ va indica filtrului 1 ca poate utiliza continutul matricei respective, deoarece a fost citita
         if (read_allowed)
         {
             sem_wait(&sem_read_a);
-            sprintf(file_name1, "./img/%d.bmp", i);
+            sprintf(file_name1, "../../img/%d.bmp", i);
             image1 = bitmap_image(file_name1);
             inImage1 = (rgb_t **)malloc(image1.height() * sizeof(rgb_t *));
             loadPixelsToArray(inImage1, image1);
@@ -191,7 +190,7 @@ void *input_task(void *args)
         else
         {
             sem_wait(&sem_read_b);
-            sprintf(file_name2, "./img/%d.bmp", i);
+            sprintf(file_name2, "../../img/%d.bmp", i);
             image2 = bitmap_image(file_name2);
             inImage2 = (rgb_t **)malloc(image2.height() * sizeof(rgb_t *));
             loadPixelsToArray(inImage2, image2);
@@ -221,10 +220,13 @@ void *output_task(void *args)
         }
 
         write_allowed = 1 - write_allowed;
+
+        // semaforul sem_write indica daca continutul matricei a fost procesat de filtre deci aceasta poate fi scrisa in fisier
+        // semaforul sem_read va indica filtrului de read input ca poate citi noi valori in matricea respectiva
         if (write_allowed == 1)
         {
             sem_wait(&sem_write_a);
-            sprintf(out_file, "./img/out/out_%d.bmp", i);
+            sprintf(out_file, "../../img/out/out_%d.bmp", i);
             out1.save_image(out_file);
             i++;
             sem_post(&sem_read_a);
@@ -232,7 +234,7 @@ void *output_task(void *args)
         else
         {
             sem_wait(&sem_write_b);
-            sprintf(out_file, "./img/out/out_%d.bmp", i);
+            sprintf(out_file, "../../img/out/out_%d.bmp", i);
             out2.save_image(out_file);
             i++;
             sem_post(&sem_read_b);
@@ -245,6 +247,10 @@ void *output_task(void *args)
 
     return NULL;
 }
+
+// la functiile ce reprezinta etapele de pipeline de aplicare a filtrelor
+// semaforul sem_filterN_ unde N este numarul filtrului va marca starea de asteptare a filtrului curent daca nicio matrice nu este disponibila
+// semaforul sem_filter(N+1) va indica filtrului urmator ca s-a terminat procesoarea actuala si ca acesta poate incepe procesarea matricei
 
 void *filter_contrast_task(void *args)
 {
@@ -259,7 +265,6 @@ void *filter_contrast_task(void *args)
         }
 
         filter2_allowed = 1 - filter2_allowed;
-
         if (filter2_allowed)
         {
             sem_wait(&sem_filter2_a);
@@ -402,11 +407,6 @@ void *filter_blur_task(void *args)
 
 int main()
 {
-    time_t time;
-    struct timeval t0, t1, t2, t3, t4, t5, t6, start, end;
-    float delta;
-    char file_name[ENOUGH], out_file[ENOUGH];
-
     int NUM_THREADS = 6;
     pthread_t threads[NUM_THREADS];
     int r1, r2, r3, r4, r5, r6;
@@ -415,7 +415,6 @@ int main()
     long arguments[NUM_THREADS];
 
     // init
-
     sem_init(&sem_read_a, 0, 1);
     sem_init(&sem_read_b, 0, 1);
     sem_init(&sem_write_a, 0, 0);
@@ -428,7 +427,6 @@ int main()
     sem_init(&sem_filter3_b, 0, 0);
     sem_init(&sem_filter4_a, 0, 0);
     sem_init(&sem_filter4_b, 0, 0);
-    gettimeofday(&start, NULL);
 
     arguments[0] = 0;
     r1 = pthread_create(&threads[0], NULL, input_task, (void *)&arguments[0]);
