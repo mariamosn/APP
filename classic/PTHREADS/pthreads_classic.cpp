@@ -7,24 +7,46 @@
 #include <sys/time.h>
 
 #define NUM_THREADS 4
-#define N 10
+#define N 500
 #define ENOUGH 100
+bitmap_image out;
+bitmap_image image1;
+rgb_t **in_image;
+
+pthread_barrier_t barrier;
 
 struct args
 {
     int height;
     int width;
     int thread_id;
+    int h_start;
+    int h_stop;
 };
 
-pthread_barrier_t barrier;
-
-bitmap_image image = bitmap_image("../../img/1.bmp");
-bitmap_image out;
-rgb_t **in_image;
-
-void loadPixelsToArray()
+void loadPixelsToArray(rgb_t **inImage, bitmap_image image)
 {
+
+    for (int i = 0; i < image.width(); i++)
+    {
+        inImage[i] = (rgb_t *)malloc(image.width() * sizeof(rgb_t));
+    }
+
+    for (int y = 0; y < image.height(); y++)
+    {
+        for (int x = 0; x < image.width(); x++)
+        {
+            image.get_pixel(y, x, inImage[y][x]);
+        }
+    }
+}
+
+rgb_t **get_original(char file_name[], int *height, int *width)
+{
+    rgb_t **in_image;
+    bitmap_image image;
+
+    image = bitmap_image(file_name);
     in_image = (rgb_t **)malloc(image.height() * sizeof(rgb_t *));
 
     for (int i = 0; i < image.width(); i++)
@@ -39,6 +61,11 @@ void loadPixelsToArray()
             image.get_pixel(y, x, in_image[y][x]);
         }
     }
+
+    *height = image.height();
+    *width = image.width();
+
+    return in_image;
 }
 
 inline unsigned long thread_max(unsigned long a, unsigned long b)
@@ -54,16 +81,16 @@ void filter_sharpness(void *args)
 
     struct args params = *((struct args *)args);
 
-    u_int64_t slice = (params.height - 2) / NUM_THREADS;
-    u_int64_t start = thread_max(1, params.thread_id * slice);
-    u_int64_t stop = (params.thread_id + 1) * slice;
+    int start = params.h_start;
+    int stop = params.h_stop;
 
-    if (params.thread_id + 1 == NUM_THREADS)
-    {
-        stop = thread_max((params.thread_id + 1) * slice, (params.height - 1));
-    }
+    if (params.h_stop == params.height)
+        stop--;
 
-    for (unsigned int i = start; i < stop; ++i)
+    if (params.h_start == 0)
+        start++;
+
+    for (int i = start; i < stop; ++i)
     {
         for (unsigned int j = 1; j < params.width - 1; ++j)
         {
@@ -94,21 +121,12 @@ void filter_contrast(void *args)
 {
     struct args params = *((struct args *)args);
 
-    u_int64_t slice = (params.height - 2) / NUM_THREADS;
-    u_int64_t start = thread_max(1, params.thread_id * slice);
-    u_int64_t stop = (params.thread_id + 1) * slice;
-
-    if (params.thread_id + 1 == NUM_THREADS)
-    {
-        stop = thread_max((params.thread_id + 1) * slice, (params.height - 1));
-    }
-
     float contrast = 0.5;
     float factor = (259. * (contrast + 255.)) / (255. * (259. - contrast));
 
-    for (unsigned int i = start; i < stop; ++i)
+    for (unsigned int i = params.h_start; i < params.h_stop; ++i)
     {
-        for (unsigned int j = 1; j < params.width - 1; ++j)
+        for (unsigned int j = 0; j < params.width; ++j)
         {
             float tempColor;
 
@@ -125,66 +143,11 @@ void filter_contrast(void *args)
     }
 }
 
-void filter_blur(void *args)
-{
-    struct args params = *((struct args *)args);
-    u_int64_t slice = (params.height - 2) / NUM_THREADS;
-    u_int64_t start = thread_max(1, params.thread_id * slice);
-    u_int64_t stop = (params.thread_id + 1) * slice;
-
-    if (params.thread_id + 1 == NUM_THREADS)
-    {
-        stop = thread_max((params.thread_id + 1) * slice, (params.height - 1));
-    }
-
-    for (int y = 0; y < params.height; y++)
-    {
-        for (int x = 0; x < params.width; x++)
-        {
-
-            int red = 0;
-            int green = 0;
-            int blue = 0;
-            int neighbors = 0;
-            rgb_t colour;
-
-            for (int i = x - 1; i <= x + 1; i++)
-            {
-                for (int j = y - 1; j <= y + 1; j++)
-                {
-                    if (i >= 0 && j >= 0 && i < params.width && j < params.height)
-                    {
-                        neighbors++;
-                        colour = in_image[i][j];
-
-                        red += colour.red;
-                        green += colour.green;
-                        blue += colour.blue;
-                    }
-                }
-            }
-            red /= neighbors;
-            green /= neighbors;
-            blue /= neighbors;
-            colour = make_colour(red, green, blue);
-            out.set_pixel(x, y, colour);
-        }
-    }
-}
-
 void filter_black_white(void *args)
 {
     struct args params = *((struct args *)args);
-    u_int64_t slice = (params.height - 2) / NUM_THREADS;
-    u_int64_t start = thread_max(1, params.thread_id * slice);
-    u_int64_t stop = (params.thread_id + 1) * slice;
 
-    if (params.thread_id + 1 == NUM_THREADS)
-    {
-        stop = thread_max((params.thread_id + 1) * slice, (params.height - 1));
-    }
-
-    for (unsigned int i = start; i < stop; ++i)
+    for (unsigned int i = params.h_start; i < params.h_stop; ++i)
     {
         for (unsigned int j = 1; j < params.width - 1; ++j)
         {
@@ -195,6 +158,44 @@ void filter_black_white(void *args)
             in_image[i][j].red = gray;
             in_image[i][j].green = gray;
             in_image[i][j].blue = gray;
+        }
+    }
+}
+
+void filter_blur(void *args)
+{
+    struct args params = *((struct args *)args);
+    for (int y = params.h_start; y < params.h_stop; y++)
+    {
+        for (int x = 0; x < params.width; x++)
+        {
+            int red = 0;
+            int green = 0;
+            int blue = 0;
+            int neighbors = 0;
+            rgb_t colour;
+
+            for (int i = x - 1; i <= x + 1; i++)
+            {
+                for (int j = y - 1; j <= y + 1; j++)
+                {
+                    if (i >= 0 && j >= params.h_start && i < params.width && j < params.h_stop)
+                    {
+                        neighbors++;
+                        colour = in_image[i][j];
+
+                        red += colour.red;
+                        green += colour.green;
+                        blue += colour.blue;
+                    }
+                }
+            }
+
+            red /= neighbors;
+            green /= neighbors;
+            blue /= neighbors;
+            colour = make_colour(red, green, blue);
+            out.set_pixel(x, y, colour);
         }
     }
 }
@@ -212,6 +213,7 @@ void *apply_filters(void *args)
     pthread_barrier_wait(&barrier);
     // filter 4
     filter_blur(args);
+    pthread_barrier_wait(&barrier);
     return NULL;
 }
 
@@ -221,49 +223,65 @@ int main(int argc, const char *argv[])
     pthread_attr_t attr;
     char file_name[ENOUGH], out_file[ENOUGH];
 
-    image = bitmap_image(file_name);
-    loadPixelsToArray();
-
-    if (!in_image)
-    {
-        printf("Error - Failed to open in_image\n");
-        return 1;
-    }
-
-    int height = image.height();
-    int width = image.width();
-
     struct timeval start_time, end_time;
     double seq_time;
-
-    pthread_barrier_init(&barrier, NULL, NUM_THREADS);
-
-    out = bitmap_image(width, height);
+    bitmap_image image;
+    int height, width;
 
     gettimeofday(&start_time, NULL);
 
-    for (int i = 0; i < NUM_THREADS; i++)
+    for (int pic = 1; pic <= N; pic++)
     {
-        struct args *params = (struct args *)malloc(sizeof(struct args));
+        pthread_barrier_init(&barrier, NULL, NUM_THREADS);
 
-        params->thread_id = i;
-        params->height = height;
-        params->width = width;
+        sprintf(file_name, "../../img/%d.bmp", pic);
 
-        pthread_create(&thread[i], NULL, &apply_filters, (void *)params);
-    }
+        // citire imagine
+        image = bitmap_image(file_name);
+        in_image = (rgb_t **)malloc(image.height() * sizeof(rgb_t *));
+        loadPixelsToArray(in_image, image);
 
-    for (int i = 0; i < NUM_THREADS; i++)
-    {
-        pthread_join(thread[i], NULL);
+        height = image.height();
+        width = image.width();
+
+        out = bitmap_image(width, height);
+
+        if (!in_image)
+        {
+            printf("Error - Failed to open in_image\n");
+            return 1;
+        }
+
+        struct args params[NUM_THREADS];
+        for (int i = 0; i < NUM_THREADS; i++)
+        {
+            params[i].h_start = (i * height / NUM_THREADS);
+            params[i].h_stop = ((i + 1) * height / NUM_THREADS);
+            if (params[i].h_stop > height)
+            {
+                params[i].h_stop = height;
+            }
+
+            params[i].thread_id = i;
+            params[i].height = height;
+            params[i].width = width;
+            pthread_create(&thread[i], NULL, &apply_filters, &params[i]);
+        }
+
+        for (int i = 0; i < NUM_THREADS; i++)
+        {
+            pthread_join(thread[i], NULL);
+        }
+
+        sprintf(out_file, "../../img/out/out_%d.bmp", pic);
+        out.save_image(out_file);
+
+        pthread_barrier_destroy(&barrier);
     }
 
     gettimeofday(&end_time, NULL);
     seq_time = (double)((end_time.tv_usec - start_time.tv_usec) / 1.0e6 + end_time.tv_sec - start_time.tv_sec);
 
     printf("time: %fs.\n", seq_time);
-
-    out.save_image("../../img/out.bmp");
-
     return 0;
 }
