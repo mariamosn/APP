@@ -1,6 +1,7 @@
+#include "../../utils/bitmap_image.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../utils/bitmap_image.hpp"
 #include "mpi.h"
 
 #define N 500
@@ -226,10 +227,11 @@ int main(int argc, char *argv[])
                 MPI_Recv(&(in_image[i][0]), width, stype, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
 
+            // filter 1
             filter_black_white(in_image, height, width);
-
+            // filter 2
             filter_contrast(in_image, height, width);
-
+            // filter 3
             filter_sharpness(in_image, height, width);
 
             out = bitmap_image(width, height);
@@ -241,6 +243,8 @@ int main(int argc, char *argv[])
                     out.set_pixel(x, y, in_image[x][y]);
                 }
             }
+
+            // filter 4
             filter_blur(in_image, height, width, out);
         }
 

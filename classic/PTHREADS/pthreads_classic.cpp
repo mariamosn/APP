@@ -9,6 +9,7 @@
 #define NUM_THREADS 4
 #define N 500
 #define ENOUGH 100
+
 bitmap_image out;
 bitmap_image image1;
 rgb_t **in_image;
@@ -39,33 +40,6 @@ void loadPixelsToArray(rgb_t **inImage, bitmap_image image)
             image.get_pixel(y, x, inImage[y][x]);
         }
     }
-}
-
-rgb_t **get_original(char file_name[], int *height, int *width)
-{
-    rgb_t **in_image;
-    bitmap_image image;
-
-    image = bitmap_image(file_name);
-    in_image = (rgb_t **)malloc(image.height() * sizeof(rgb_t *));
-
-    for (int i = 0; i < image.width(); i++)
-    {
-        in_image[i] = (rgb_t *)malloc(image.width() * sizeof(rgb_t));
-    }
-
-    for (int y = 0; y < image.height(); y++)
-    {
-        for (int x = 0; x < image.width(); x++)
-        {
-            image.get_pixel(y, x, in_image[y][x]);
-        }
-    }
-
-    *height = image.height();
-    *width = image.width();
-
-    return in_image;
 }
 
 inline unsigned long thread_max(unsigned long a, unsigned long b)
