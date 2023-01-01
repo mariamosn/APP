@@ -94,9 +94,12 @@ void filter_sharpness(rgb_t **in_image, int height, int width)
             {
                 for (int kj = -1; kj <= 1; ++kj)
                 {
-                    red += static_cast<float>(in_image[i + ki][j + kj].red) * kernel[ki + 1][kj + 1];
-                    green += static_cast<float>(in_image[i + ki][j + kj].green) * kernel[ki + 1][kj + 1];
-                    blue += static_cast<float>(in_image[i + ki][j + kj].blue) * kernel[ki + 1][kj + 1];
+                    red += static_cast<float>(in_image[i + ki][j + kj].red) *
+                        kernel[ki + 1][kj + 1];
+                    green += static_cast<float>(in_image[i + ki][j + kj].green)
+                        * kernel[ki + 1][kj + 1];
+                    blue += static_cast<float>(in_image[i + ki][j + kj].blue) *
+                        kernel[ki + 1][kj + 1];
                 }
             }
 
@@ -126,7 +129,7 @@ void filter_blur(rgb_t **in_image, int height, int width, bitmap_image &out)
             {
                 for (int j = y - 1; j <= y + 1; j++)
                 {
-                    if (i >= 0 && j >= 0 && i < width && j < height) // poate (end -start)?
+                    if (i >= 0 && j >= 0 && i < width && j < height)
                     {
                         neighbors++;
                         colour = in_image[i][j];
@@ -171,9 +174,6 @@ int main(int argc, char *argv[])
     int numtasks, rank, height, width;
     char file_name[ENOUGH], out_file[ENOUGH];
 
-    double timer_start;
-    double timer_end;
-
     rgb_t **in_image = NULL;
     MPI_Datatype stype;
     bitmap_image out;
@@ -209,9 +209,9 @@ int main(int argc, char *argv[])
                 // trimit un nr de linii fiecarui thread
                 for (int i = start; i < end; ++i)
                 {
-                    MPI_Send(&(in_image[i][0]), width, stype, tid, 0, MPI_COMM_WORLD);
+                    MPI_Send(&(in_image[i][0]), width, stype, tid, 0,
+                        MPI_COMM_WORLD);
                 }
-                timer_start = MPI_Wtime();
             }
         }
         else
@@ -224,7 +224,8 @@ int main(int argc, char *argv[])
 
             for (int i = start; i < end; ++i)
             {
-                MPI_Recv(&(in_image[i][0]), width, stype, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(&(in_image[i][0]), width, stype, 0, 0, MPI_COMM_WORLD,
+                    MPI_STATUS_IGNORE);
             }
 
             // filter 1
@@ -256,14 +257,6 @@ int main(int argc, char *argv[])
             free(in_image[i]);
         }
         free(in_image);
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    if (rank == 0)
-    {
-        timer_end = MPI_Wtime();
-        printf("time: %fs.\n", timer_end - timer_start);
     }
 
     MPI_Finalize();
