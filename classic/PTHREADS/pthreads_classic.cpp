@@ -6,7 +6,7 @@
 #include <string>
 #include <sys/time.h>
 
-#define NUM_THREADS 4
+#define NUM_THREADS 3
 #define N 500
 #define ENOUGH 100
 
@@ -28,7 +28,7 @@ struct args
 void loadPixelsToArray(rgb_t **inImage, bitmap_image image)
 {
 
-    for (int i = 0; i < image.width(); i++)
+    for (int i = 0; i < image.height(); i++)
     {
         inImage[i] = (rgb_t *)malloc(image.width() * sizeof(rgb_t));
     }
@@ -202,12 +202,12 @@ int main(int argc, const char *argv[])
     bitmap_image image;
     int height, width;
 
+    pthread_barrier_init(&barrier, NULL, NUM_THREADS);
+
     gettimeofday(&start_time, NULL);
 
     for (int pic = 1; pic <= N; pic++)
     {
-        pthread_barrier_init(&barrier, NULL, NUM_THREADS);
-
         sprintf(file_name, "../../img/%d.bmp", pic);
 
         // citire imagine
@@ -249,11 +249,10 @@ int main(int argc, const char *argv[])
 
         sprintf(out_file, "../../img/out/out_%d.bmp", pic);
         out.save_image(out_file);
-
-        pthread_barrier_destroy(&barrier);
     }
 
     gettimeofday(&end_time, NULL);
+    pthread_barrier_destroy(&barrier);
     seq_time = (double)((end_time.tv_usec - start_time.tv_usec) / 1.0e6 + end_time.tv_sec - start_time.tv_sec);
 
     printf("time: %fs.\n", seq_time);
