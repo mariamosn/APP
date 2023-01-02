@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string>
-#include <sys/time.h>
 
 #define NUM_THREADS 3
 #define N 500
@@ -76,9 +75,12 @@ void filter_sharpness(void *args)
             {
                 for (int kj = -1; kj <= 1; ++kj)
                 {
-                    red += static_cast<float>(in_image[i + ki][j + kj].red) * kernel[ki + 1][kj + 1];
-                    green += static_cast<float>(in_image[i + ki][j + kj].green) * kernel[ki + 1][kj + 1];
-                    blue += static_cast<float>(in_image[i + ki][j + kj].blue) * kernel[ki + 1][kj + 1];
+                    red += static_cast<float>(in_image[i + ki][j + kj].red) *
+                        kernel[ki + 1][kj + 1];
+                    green += static_cast<float>(in_image[i + ki][j + kj].green)
+                        * kernel[ki + 1][kj + 1];
+                    blue += static_cast<float>(in_image[i + ki][j + kj].blue) *
+                        kernel[ki + 1][kj + 1];
                 }
             }
             red = (red < 0) ? 0 : red;
@@ -153,7 +155,8 @@ void filter_blur(void *args)
             {
                 for (int j = y - 1; j <= y + 1; j++)
                 {
-                    if (i >= 0 && j >= params.h_start && i < params.width && j < params.h_stop)
+                    if (i >= 0 && j >= params.h_start && i < params.width &&
+                        j < params.h_stop)
                     {
                         neighbors++;
                         colour = in_image[i][j];
@@ -197,8 +200,6 @@ int main(int argc, const char *argv[])
     pthread_attr_t attr;
     char file_name[ENOUGH], out_file[ENOUGH];
 
-    struct timeval start_time, end_time;
-    double seq_time;
     bitmap_image image;
     int height, width;
 
