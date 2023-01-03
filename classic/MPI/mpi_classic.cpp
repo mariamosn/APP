@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include "mpi.h"
 
-#define N 500
+#define N 1
 #define ENOUGH 100
 
 using namespace std;
 
-rgb_t **get_original(char file_name[], int *height, int *width)
+rgb_t **get_original(char file_name[], int *height, int start, int end, int *width)
 {
     rgb_t **in_image;
     bitmap_image image;
@@ -17,7 +17,7 @@ rgb_t **get_original(char file_name[], int *height, int *width)
     image = bitmap_image(file_name);
     in_image = (rgb_t **)malloc(image.height() * sizeof(rgb_t *));
 
-    for (int i = 0; i < image.width(); i++)
+    for (int i = 0; i < image.height(); i++)
     {
         in_image[i] = (rgb_t *)malloc(image.width() * sizeof(rgb_t));
     }
@@ -36,9 +36,19 @@ rgb_t **get_original(char file_name[], int *height, int *width)
     return in_image;
 }
 
-void filter_black_white(rgb_t **in_image, int height, int width)
+void filter_black_white(rgb_t **in_image, int height, int start, int end, int width)
 {
-    for (unsigned int i = 0; i < height; ++i)
+    if (end == height)
+    {
+        end--;
+    }
+
+    if (start == 0)
+    {
+        start++;
+    }
+
+    for (unsigned int i = start; i < end; ++i)
     {
         for (unsigned int j = 0; j < width - 1; ++j)
         {
@@ -53,11 +63,22 @@ void filter_black_white(rgb_t **in_image, int height, int width)
     }
 }
 
-void filter_contrast(rgb_t **in_image, int height, int width)
+void filter_contrast(rgb_t **in_image, int height, int start, int end, int width)
 {
     float contrast = 0.5;
     float factor = (259. * (contrast + 255.)) / (255. * (259. - contrast));
-    for (unsigned int i = 1; i < height - 1; ++i)
+
+    if (end == height)
+    {
+        end--;
+    }
+
+    if (start == 0)
+    {
+        start++;
+    }
+
+    for (unsigned int i = start; i < end; ++i)
     {
         for (unsigned int j = 1; j < width - 1; ++j)
         {
@@ -76,13 +97,22 @@ void filter_contrast(rgb_t **in_image, int height, int width)
     }
 }
 
-void filter_sharpness(rgb_t **in_image, int height, int width)
+void filter_sharpness(rgb_t **in_image, int height, int start, int end, int width)
 {
     static const float kernel[3][3] = {{0, -2. / 3., 0},
                                        {-2. / 3., 11. / 3., -2. / 3.},
                                        {0, -2. / 3., 0}};
+    if (end == height)
+    {
+        end--;
+    }
 
-    for (int i = 1; i < height - 1; ++i)
+    if (start == 0)
+    {
+        start++;
+    }
+
+    for (int i = start; i < end; ++i)
     {
         for (int j = 1; j < width - 1; ++j)
         {
@@ -110,9 +140,19 @@ void filter_sharpness(rgb_t **in_image, int height, int width)
     }
 }
 
-void filter_blur(rgb_t **in_image, int height, int width, bitmap_image &out)
+void filter_blur(rgb_t **in_image, int height, int start, int end, int width, bitmap_image &out)
 {
-    for (int y = 1; y < height - 1; y++)
+    if (end == height)
+    {
+        end--;
+    }
+
+    if (start == 0)
+    {
+        start++;
+    }
+
+    for (int y = start; y < end; y++)
     {
         for (int x = 0; x < width; x++)
         {
@@ -126,7 +166,7 @@ void filter_blur(rgb_t **in_image, int height, int width, bitmap_image &out)
             {
                 for (int j = y - 1; j <= y + 1; j++)
                 {
-                    if (i >= 0 && j >= 0 && i < width && j < height) // poate (end -start)?
+                    if (i >= 0 && j >= 0 && i < width && j < end)
                     {
                         neighbors++;
                         colour = in_image[i][j];
@@ -161,18 +201,10 @@ void define_struct(MPI_Datatype *stype)
     MPI_Type_commit(stype);
 }
 
-inline unsigned long thread_max(unsigned long a, unsigned long b)
-{
-    return (a > b) ? a : b;
-}
-
 int main(int argc, char *argv[])
 {
-    int numtasks, rank, height, width;
+    int numtasks, rank, height, start, end, width;
     char file_name[ENOUGH], out_file[ENOUGH];
-
-    double timer_start;
-    double timer_end;
 
     rgb_t **in_image = NULL;
     MPI_Datatype stype;
@@ -187,7 +219,7 @@ int main(int argc, char *argv[])
     for (int pic = 1; pic <= N; pic++)
     {
         sprintf(file_name, "../../img/%d.bmp", pic);
-        in_image = get_original(file_name, &height, &width);
+        in_image = get_original(file_name, &height, start, end, &width);
 
         if (!in_image)
         {
@@ -211,7 +243,6 @@ int main(int argc, char *argv[])
                 {
                     MPI_Send(&(in_image[i][0]), width, stype, tid, 0, MPI_COMM_WORLD);
                 }
-                timer_start = MPI_Wtime();
             }
         }
         else
@@ -228,11 +259,11 @@ int main(int argc, char *argv[])
             }
 
             // filter 1
-            filter_black_white(in_image, height, width);
+            filter_black_white(in_image, height, start, end, width);
             // filter 2
-            filter_contrast(in_image, height, width);
+            filter_contrast(in_image, height, start, end, width);
             // filter 3
-            filter_sharpness(in_image, height, width);
+            filter_sharpness(in_image, height, start, end, width);
 
             out = bitmap_image(width, height);
 
@@ -245,8 +276,10 @@ int main(int argc, char *argv[])
             }
 
             // filter 4
-            filter_blur(in_image, height, width, out);
+            filter_blur(in_image, height, start, end, width, out);
         }
+
+        MPI_Barrier(MPI_COMM_WORLD);
 
         sprintf(out_file, "../../img/out/out_%d.bmp", pic);
         out.save_image(out_file);
@@ -256,14 +289,6 @@ int main(int argc, char *argv[])
             free(in_image[i]);
         }
         free(in_image);
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    if (rank == 0)
-    {
-        timer_end = MPI_Wtime();
-        printf("time: %fs.\n", timer_end - timer_start);
     }
 
     MPI_Finalize();
