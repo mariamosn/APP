@@ -3,7 +3,7 @@
 #include "../../utils/bitmap_image.hpp"
 #include "mpi.h"
 
-#define N 500
+#define N 1000
 #define ENOUGH 100
 
 using namespace std;
