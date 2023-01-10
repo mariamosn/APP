@@ -3,7 +3,7 @@
 #include "../../utils/bitmap_image.hpp"
 #include <omp.h>
 
-#define N 500
+#define N 1000
 #define ENOUGH 100
 
 using namespace std;
@@ -27,7 +27,7 @@ void loadPixelsToArray(rgb_t **inImage, bitmap_image image)
 
 int main()
 {
-    omp_set_num_threads(4);
+    omp_set_num_threads(6);
 
 #pragma omp parallel for
     for (int pic = 1; pic <= N; pic++)

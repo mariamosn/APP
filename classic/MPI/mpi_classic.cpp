@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 
-#define N 1
+#define N 1000
 #define ENOUGH 100
 
 using namespace std;

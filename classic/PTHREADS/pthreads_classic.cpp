@@ -5,8 +5,8 @@
 #include <pthread.h>
 #include <string>
 
-#define NUM_THREADS 3
-#define N 500
+#define NUM_THREADS 6
+#define N 1000
 #define ENOUGH 100
 
 bitmap_image out;
