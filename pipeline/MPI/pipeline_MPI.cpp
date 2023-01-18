@@ -182,211 +182,106 @@ int main(int argc, char *argv[])
 
     define_struct(&stype);
 
-    if (rank < 3) {
-        for (int pic = 1; pic <= N; pic++) {
-            if (rank == 0) {
-                sprintf(file_name, "../../img/%d.bmp", pic);
+    for (int pic = 1; pic <= N; pic++) {
+        if (rank == 0) {
+            sprintf(file_name, "../../img/%d.bmp", pic);
 
-                // citire imagine
-                inImage = get_original(file_name, &height, &width);
+            // citire imagine
+            inImage = get_original(file_name, &height, &width);
 
-                // filtru 1 = alb-negru
-                filter_black_white(inImage, height, width);
+            // filtru 1 = alb-negru
+            filter_black_white(inImage, height, width);
 
-                // filtru 2 = contrast
-                filter_contrast(inImage, height, width);
+            // filtru 2 = contrast
+            filter_contrast(inImage, height, width);
 
-                // trimite catre 1
-                // height
-                MPI_Send(&height, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // width
-                MPI_Send(&width, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
-                }
-
-                // free img
-                for (int i = 0; i < width; i++) {
-                    free(inImage[i]);
-                }
-                free(inImage);
-
-            } else if (rank == 1) {
-                // primeste de la 0
-                // height
-                MPI_Recv(&height, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // width
-                MPI_Recv(&width, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // aloca img
-                inImage = (rgb_t **)malloc(height * sizeof(rgb_t *));
-                for (int i = 0; i < width; i++) {
-                    inImage[i] = (rgb_t *)malloc(width * sizeof(rgb_t));
-                }
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-
-                // filtru 3 = sharpness
-                filter_sharpness(inImage, height, width);
-
-                // trimite catre 2
-                // height
-                MPI_Send(&height, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // width
-                MPI_Send(&width, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
-                }
-
-                // free img
-                for (int i = 0; i < width; i++) {
-                    free(inImage[i]);
-                }
-                free(inImage);
-
-            } else if (rank == 2) {
-                // primeste de la 1
-                // height
-                MPI_Recv(&height, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // width
-                MPI_Recv(&width, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // aloca img
-                inImage = (rgb_t **)malloc(height * sizeof(rgb_t *));
-                for (int i = 0; i < width; i++) {
-                    inImage[i] = (rgb_t *)malloc(width * sizeof(rgb_t));
-                }
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-
-                out = bitmap_image(width, height);
-
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        out.set_pixel(x, y, inImage[x][y]);
-                    }
-                }
-
-                // filtru 4 = blur
-                filter_blur(inImage, height, width, out);
-
-                // scriere imagine
-                sprintf(out_file, "../../img/out/out_%d.bmp", pic);
-                out.save_image(out_file);
-
-                // free img
-                for (int i = 0; i < width; i++) {
-                    free(inImage[i]);
-                }
-                free(inImage);
+            // trimite catre 1
+            // height
+            MPI_Send(&height, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+            // width
+            MPI_Send(&width, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+            // img
+            for (int i = 0; i < height; i++) {
+                MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
             }
-        }
-    } else {
-        for (int pic = 501; pic <= 1000; pic++) {
-            if (rank == 3) {
-                sprintf(file_name, "../../img/%d.bmp", pic);
 
-                // citire imagine
-                inImage = get_original(file_name, &height, &width);
-
-                // filtru 1 = alb-negru
-                filter_black_white(inImage, height, width);
-
-                // filtru 2 = contrast
-                filter_contrast(inImage, height, width);
-
-                // trimite catre 1
-                // height
-                MPI_Send(&height, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // width
-                MPI_Send(&width, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
-                }
-
-                // free img
-                for (int i = 0; i < width; i++) {
-                    free(inImage[i]);
-                }
-                free(inImage);
-
-            } else if (rank == 4) {
-                // primeste de la 0
-                // height
-                MPI_Recv(&height, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // width
-                MPI_Recv(&width, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // aloca img
-                inImage = (rgb_t **)malloc(height * sizeof(rgb_t *));
-                for (int i = 0; i < width; i++) {
-                    inImage[i] = (rgb_t *)malloc(width * sizeof(rgb_t));
-                }
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-
-                // filtru 3 = sharpness
-                filter_sharpness(inImage, height, width);
-
-                // trimite catre 2
-                // height
-                MPI_Send(&height, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // width
-                MPI_Send(&width, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
-                }
-
-                // free img
-                for (int i = 0; i < width; i++) {
-                    free(inImage[i]);
-                }
-                free(inImage);
-
-            } else if (rank == 5) {
-                // primeste de la 1
-                // height
-                MPI_Recv(&height, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // width
-                MPI_Recv(&width, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                // aloca img
-                inImage = (rgb_t **)malloc(height * sizeof(rgb_t *));
-                for (int i = 0; i < width; i++) {
-                    inImage[i] = (rgb_t *)malloc(width * sizeof(rgb_t));
-                }
-                // img
-                for (int i = 0; i < height; i++) {
-                    MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-
-                out = bitmap_image(width, height);
-
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        out.set_pixel(x, y, inImage[x][y]);
-                    }
-                }
-
-                // filtru 4 = blur
-                filter_blur(inImage, height, width, out);
-
-                // scriere imagine
-                sprintf(out_file, "../../img/out/out_%d.bmp", pic);
-                out.save_image(out_file);
-
-                // free img
-                for (int i = 0; i < width; i++) {
-                    free(inImage[i]);
-                }
-                free(inImage);
+            // free img
+            for (int i = 0; i < width; i++) {
+                free(inImage[i]);
             }
+            free(inImage);
+
+        } else if (rank == 1) {
+            // primeste de la 0
+            // height
+            MPI_Recv(&height, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // width
+            MPI_Recv(&width, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // aloca img
+            inImage = (rgb_t **)malloc(height * sizeof(rgb_t *));
+            for (int i = 0; i < width; i++) {
+                inImage[i] = (rgb_t *)malloc(width * sizeof(rgb_t));
+            }
+            // img
+            for (int i = 0; i < height; i++) {
+                MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+
+            // filtru 3 = sharpness
+            filter_sharpness(inImage, height, width);
+
+            // trimite catre 2
+            // height
+            MPI_Send(&height, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+            // width
+            MPI_Send(&width, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+            // img
+            for (int i = 0; i < height; i++) {
+                MPI_Send(&(inImage[i][0]), width, stype, rank + 1, 0, MPI_COMM_WORLD);
+            }
+
+            // free img
+            for (int i = 0; i < width; i++) {
+                free(inImage[i]);
+            }
+            free(inImage);
+
+        } else if (rank == 2) {
+            // primeste de la 1
+            // height
+            MPI_Recv(&height, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // width
+            MPI_Recv(&width, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // aloca img
+            inImage = (rgb_t **)malloc(height * sizeof(rgb_t *));
+            for (int i = 0; i < width; i++) {
+                inImage[i] = (rgb_t *)malloc(width * sizeof(rgb_t));
+            }
+            // img
+            for (int i = 0; i < height; i++) {
+                MPI_Recv(&(inImage[i][0]), width, stype, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+
+            out = bitmap_image(width, height);
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    out.set_pixel(x, y, inImage[x][y]);
+                }
+            }
+
+            // filtru 4 = blur
+            filter_blur(inImage, height, width, out);
+
+            // scriere imagine
+            sprintf(out_file, "../../img/out/out_%d.bmp", pic);
+            out.save_image(out_file);
+
+            // free img
+            for (int i = 0; i < width; i++) {
+                free(inImage[i]);
+            }
+            free(inImage);
         }
     }
 
