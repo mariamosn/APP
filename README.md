@@ -5,9 +5,9 @@ Vom compara performața a două abordări ale aplicării succesive de filtre
 (pipeline vs. embarrassingly parallel).
 
 # Echipa proiectului:
-- Isar Ioana-Teodora
-- Moșneag Maria
-- Tîmbur Maria
+- Isar Ioana-Teodora (@ioanaisar)
+- Moșneag Maria (@mariamosn)
+- Tîmbur Maria (@mariatmbr)
 
 # Asistent
 - Voichița Iancu
